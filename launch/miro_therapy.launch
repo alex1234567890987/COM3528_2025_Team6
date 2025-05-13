@@ -1,0 +1,3 @@
+<launch>
+  <node name="start_screen" pkg="com3528_team6_miro_therapist" type="start_screen.py" output="screen"/>
+</launch>
