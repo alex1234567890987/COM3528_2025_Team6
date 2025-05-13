@@ -12,6 +12,7 @@ This program aims to automate reminiscene therapy using a Miro robot. The robot 
 
 * Describe any prerequisites, libraries, OS version, etc., needed before installing program.
 * ex. Windows 10
+* Update/install to latest version of pip [Click here]([https://link-url-here.org](https://pypi.org/project/daily-python/#files)) locally download the correct wheel for your system (on the diamond laptops this should be the first one)
 
 ### Installing
 
@@ -41,3 +42,6 @@ Any advise for common problems or issues.
 ```
 command to run if program contains helper info
 ```
+![Screenshot 2025-05-13 003811](https://github.com/user-attachments/assets/48a66008-8955-45d8-a081-467eb89518f4)
+
+
