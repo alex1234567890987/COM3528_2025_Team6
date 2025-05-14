@@ -55,6 +55,8 @@ you must have an openai account, set up an API key and put this in image_descrip
 
 you must also have a vapi account, in the dashboard set up a blank template assistant with the prompt located in the appendix of the report, only other settings were to disable background noise 
 
+you must set up a vapi api key and put this into vapi_therapist.py
+
 **EXTREMELY IMPORTANT FOR VAPI EMOTION SET UP**: in the assistant you must put your ngrok static domain in the server url - in order to stream vapi messages - you must put your ngrok auth-token here too - this is easily found on the ngrok website at the top of the page
 
 - ngrok static domain for now is this: https://eminent-sought-beetle.ngrok-free.app (this may get reset before you check and you will have to set it up)
