@@ -4,7 +4,7 @@ import os
 import json
 
 #openai_api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="")
 
 last_processed_user_text = ""
 

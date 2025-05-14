@@ -21,7 +21,7 @@ def run_vapi_in_process(image_description, patient_history, audio_queue):
     vapi.create_and_start_assistant()
 
 class ReminiscenceTherapyGUI(ttk.Frame):
-    def __init__(self, root, patient_info, theme_path=os.path.join(os.path.dirname(__file__), "Azure-ttk-theme-main", "azure.tcl")):
+    def __init__(self, root, patient_info=None, theme_path=os.path.join(os.path.dirname(__file__), "Azure-ttk-theme-main", "azure.tcl")):
         super().__init__(root, padding=20)
         self.root = root
         self.root.tk.call("source", theme_path)
@@ -39,13 +39,12 @@ class ReminiscenceTherapyGUI(ttk.Frame):
         self.root.minsize(800, 600)
         self.pack(fill="both", expand=True)
 
-        self.patient_name = str(patient_info.get("name", "Unknown"))
-        self.patient_age = str(patient_info.get("age", "Unknown"))
-        self.history_file_path = patient_info.get("history_path")
+        self.history_file_path = None
         self.history_text = None
-
         self.image_file_path = None
         self.image_type = tk.StringVar(value="personal")
+        self.uploaded_photo = None
+        self.patient_name = "Patient"  # Placeholder name
 
         self._build_image_panel()
         self._build_info_panel()
@@ -54,7 +53,8 @@ class ReminiscenceTherapyGUI(ttk.Frame):
         self.columnconfigure(1, weight=2)
         self.rowconfigure(0, weight=1)
 
-        if self.history_file_path:
+        if patient_info and patient_info.get("history_path"):
+            self.history_file_path = patient_info["history_path"]
             self._preview_pdf(self.history_file_path)
             self.history_text = self._extract_text_from_pdf(self.history_file_path)
 
@@ -83,8 +83,6 @@ class ReminiscenceTherapyGUI(ttk.Frame):
 
         info_frame = ttk.LabelFrame(panel, text="Patient Info", padding=12)
         info_frame.pack(fill="x")
-        ttk.Label(info_frame, text=f"Name: {self.patient_name}").pack(anchor="w")
-        ttk.Label(info_frame, text=f"Age: {self.patient_age}").pack(anchor="w")
 
         self.history_label = ttk.Label(info_frame, text="History: none uploaded", foreground="grey")
         self.history_label.pack(anchor="w", pady=(5, 0))
@@ -105,9 +103,9 @@ class ReminiscenceTherapyGUI(ttk.Frame):
             self.image_file_path = file_path
             image = Image.open(file_path)
             image.thumbnail((600, 600))
-            photo = ImageTk.PhotoImage(image)
-            self.image_display.configure(image=photo, text="")
-            self.image_display.image = photo
+            self.uploaded_photo = ImageTk.PhotoImage(image)
+            self.image_display.configure(image=self.uploaded_photo, text="")
+            self.image_display.image = self.uploaded_photo
 
             describer = ImageDescriber(image_path=file_path)
             self.image_description_widget.delete("1.0", "end")
@@ -141,7 +139,13 @@ class ReminiscenceTherapyGUI(ttk.Frame):
 
     def _show_therapy_view(self):
         self.pack_forget()
-        self.therapy_frame = TherapySessionFrame(self.root, self.patient_name, self.shared_state, self._return_to_main_view)
+        self.therapy_frame = TherapySessionFrame(
+            self.root,
+            self.patient_name,
+            self.shared_state,
+            self._return_to_main_view,
+            self.uploaded_photo
+        )
         self.therapy_frame.pack(fill="both", expand=True)
 
     def _return_to_main_view(self):
@@ -243,7 +247,7 @@ class ReminiscenceTherapyGUI(ttk.Frame):
         self.root.destroy()
 
 class TherapySessionFrame(ttk.Frame):
-    def __init__(self, parent, patient_name, shared_state, end_session_callback):
+    def __init__(self, parent, patient_name, shared_state, end_session_callback, uploaded_image=None):
         super().__init__(parent, padding=40)
         self.root = parent
         self.shared_state = shared_state
@@ -254,20 +258,51 @@ class TherapySessionFrame(ttk.Frame):
 
         ttk.Label(self, text=f"Therapy Session with {patient_name}", font=("Segoe UI", 20, "bold")).pack(pady=(0, 20))
 
-        self.timer_label = ttk.Label(self, text="Session Time: 00:00", font=("Segoe UI", 14))
+        # Main panel with two columns
+        main_panel = ttk.Frame(self)
+        main_panel.pack(fill="both", expand=True)
+
+        # LEFT: image panel
+        if uploaded_image:
+            image_frame = ttk.LabelFrame(main_panel, text="Image in Use", padding=10)
+            image_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 20))
+            img_label = ttk.Label(image_frame, image=uploaded_image)
+            img_label.image = uploaded_image
+            img_label.pack()
+
+        # RIGHT: controls panel
+        controls_frame = ttk.LabelFrame(main_panel, text="Session Info", padding=20)
+        controls_frame.grid(row=0, column=1, sticky="nsew")
+
+        self.timer_label = ttk.Label(controls_frame, text="Session Time: 00:00", font=("Segoe UI", 14))
         self.timer_label.pack(pady=10)
         self._update_timer()
 
-        self.mode_label = ttk.Label(self, text="Mode: idle", font=("Segoe UI", 14, "italic"), foreground="gray")
+        self.mode_label = ttk.Label(controls_frame, text="Mode: idle", font=("Segoe UI", 14, "italic"), foreground="gray")
         self.mode_label.pack(pady=5)
         self._update_mode_label()
 
         self.talk_label = ttk.Label(
-            self, text="Hold [T] to Talk to MiRo", font=("Segoe UI", 18, "bold"), foreground="green"
+            controls_frame,
+            text="Press and Release [T] to Talk to MiRo",
+            font=("Segoe UI", 16, "bold"),
+            foreground="green",
+            wraplength=250,
+            justify="center"
         )
-        self.talk_label.pack(pady=40)
+        self.talk_label.pack(pady=30)
 
-        ttk.Button(self, text="End Therapy Session", command=self._end_session, style="Accent.TButton").pack(pady=30, ipady=8)
+        ttk.Button(
+            controls_frame,
+            text="End Therapy Session",
+            command=self._end_session,
+            style="Accent.TButton"
+        ).pack(pady=20, ipady=8)
+
+        # Grid weight for resizing
+        main_panel.columnconfigure(0, weight=1)
+        main_panel.columnconfigure(1, weight=1)
+        main_panel.rowconfigure(0, weight=1)
 
     def _update_timer(self):
         elapsed = int(time.time() - self.start_time)
@@ -292,9 +327,9 @@ class TherapySessionFrame(ttk.Frame):
         if callable(self.end_session_callback):
             self.end_session_callback()
 
+
 if __name__ == "__main__":
-    patient_data = {"name": "Alex Smith", "age": "73"}
     root = tk.Tk()
-    app = ReminiscenceTherapyGUI(root, patient_data)
+    app = ReminiscenceTherapyGUI(root)
     root.protocol("WM_DELETE_WINDOW", app._on_app_exit)
     root.mainloop()

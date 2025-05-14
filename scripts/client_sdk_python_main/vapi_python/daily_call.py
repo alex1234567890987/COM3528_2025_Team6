@@ -109,7 +109,7 @@ class DailyCall(daily.EventHandler):
             self.output_stream.write(buf, CHUNK_SIZE)
 
             # Gain boost + send to audio queue
-            gain = 3
+            gain = 5
             samples = np.frombuffer(buf, dtype=np.int16).astype(np.float32) * gain
             samples = np.clip(samples, -32768, 32767).astype(np.int16)
 

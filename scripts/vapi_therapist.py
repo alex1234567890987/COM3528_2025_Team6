@@ -7,7 +7,7 @@ class Vapi_TheRapist:
     def __init__(self, image_description, patient_history, audio_queue):
         # Initialise Vapi client
         self.daily_call = DailyCall(audio_queue)  # ← start Daily first
-        self.assistant = Vapi(api_key="a47017e1-76b2-40fd-8c5e-19eee6b056a2", daily_client=self.daily_call)
+        self.assistant = Vapi(api_key="", daily_client=self.daily_call)
         self.image_description = image_description
         self.patient_history = patient_history
         self.audio_queue = audio_queue

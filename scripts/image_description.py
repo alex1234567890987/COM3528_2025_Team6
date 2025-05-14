@@ -3,7 +3,7 @@ import base64
 import openai
 from openai import OpenAI
 
-CLIENT = OpenAI(api_key="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")
+CLIENT = OpenAI(api_key="")
 
 class ImageDescriber():
     def __init__(self, image_path):
